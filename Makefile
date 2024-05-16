@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Iinclude $(shell sdl2-config --cflags) -I/usr/include/SDL2
-LDFLAGS = $(shell sdl2-config --libs) -lSDL2_image -lm -lSDL2
+LDFLAGS = $(shell sdl2-config --libs) -lSDL2_image -lm
 
 SRC_DIR = src
 OBJ_DIR = build
@@ -34,12 +34,33 @@ $(TEST_RENDERING_TARGET): $(OBJ_DIR)/test_rendering.o $(OBJ_DIR)/rendering.o $(O
 	$(CC) $(OBJ_DIR)/test_rendering.o $(OBJ_DIR)/rendering.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/physics.o -o $@ $(LDFLAGS)
 
 $(TEST_GAME_TARGET): $(OBJ_DIR)/test_game.o $(OBJ_DIR)/game.o $(OBJ_DIR)/physics.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/rendering.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/ai.o
-	$(CC) $(OBJ_DIR)/test_game.o $(OBJ_DIR)/game
+	$(CC) $(OBJ_DIR)/test_game.o $(OBJ_DIR)/game.o $(OBJ_DIR)/physics.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/rendering.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/ai.o -o $@ $(LDFLAGS)
 
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Dependency check (example for SDL2)
-check-dependencies:
-	@command -v sdl2-config >/dev/null 2>&1 || { echo >&2 "SDL2 is not installed. Aborting."; exit 1; }
+$(OBJ_DIR)/%.o: $(TEST_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Build target with dependency check
-build: check-dependencies all
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+
+clean:
+	rm -rf $(OBJ_DIR)/*
+	rm -rf $(TARGET)
+	rm -rf $(TEST_TARGET)
+	rm -rf $(TEST_CONTROLS_TARGET)
+	rm -rf $(TEST_RENDERING_TARGET)
+	rm -rf $(TEST_GAME_TARGET)
+
+test: $(TEST_TARGET)
+	./$(TEST_TARGET)
+
+test_controls: $(TEST_CONTROLS_TARGET)
+	./$(TEST_CONTROLS_TARGET)
+
+test_rendering: $(TEST_RENDERING_TARGET)
+	./$(TEST_RENDERING_TARGET)
+
+test_game: $(TEST_GAME_TARGET)
+	./$(TEST_GAME_TARGET)
