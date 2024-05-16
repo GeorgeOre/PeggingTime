@@ -16,6 +16,6 @@ void update_position(Object* obj, float dt) {
 int check_collision(const Object* obj1, const Object* obj2) {
     float dx = obj1->x - obj2->x;
     float dy = obj1->y - obj2->y;
-    float distance = sqrtf(dx * dy + dy * dy);
+    float distance = sqrtf(dx * dx + dy * dy);
     return distance < (obj1->radius + obj2->radius);
 }

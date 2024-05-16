@@ -4,19 +4,81 @@
 #include "controls.h"
 #include "rendering.h"
 #include "game.h"
+#include "utils.h"
+
+void render_menu();
+void handle_menu_input(int* running, GameState* state);
 
 int main() {
-    // Game initialization
-    Object player = {0, 0, 0, 0, 1.0};
-    float gravity = 9.8;
-    float dt = 0.016; // Assuming 60 FPS
-
-    while (1) {
-        handle_input();
-        apply_gravity(&player, gravity);
-        update_position(&player, dt);
-        render(&player);
+    if (!init_SDL()) {
+        return 1;
     }
 
+    if (!init_renderer(&gRenderer, &gWindow)) {
+        close_SDL();
+        return 1;
+    }
+
+    int running = 1;
+    float dt = 0.016; // Assuming 60 FPS
+
+    // Initialize game and set the initial state to the main menu
+    Game game;
+    game.state = GAME_MENU;
+
+    while (running) {
+        if (game.state == GAME_MENU) {
+            handle_menu_input(&running, &game.state);
+            render_menu();
+        } else if (game.state == GAME_RUNNING) {
+            if (!init_game(&game)) {
+                close_SDL();
+                return 1;
+            }
+
+            while (running && game.state == GAME_RUNNING) {
+                handle_input(&game.player, &running, 1);
+                update_game(&game, dt);
+                render_game(&game);
+
+                SDL_Delay(16); // Roughly 60 FPS
+
+                // Exit game loop if game over
+                if (game.state == GAME_OVER) {
+                    printf("Game Over!\n");
+                    running = 0;
+                }
+            }
+
+            cleanup_game(&game);
+        } else if (game.state == GAME_VERSUS) {
+            VersusGame versus_game;
+            if (!init_versus_game(&versus_game)) {
+                close_SDL();
+                return 1;
+            }
+
+            while (running && game.state == GAME_VERSUS) {
+                // Handle input for both players
+                handle_input(&versus_game.player1, &running, 1);
+                handle_input(&versus_game.player2, &running, 2);
+
+                update_versus_game(&versus_game, dt);
+                render_versus_game(&versus_game);
+
+                SDL_Delay(16); // Roughly 60 FPS
+
+                // Exit game loop if game over
+                if (versus_game.state == GAME_OVER) {
+                    printf("Game Over!\n");
+                    running = 0;
+                }
+            }
+
+            cleanup_versus_game(&versus_game);
+        }
+    }
+
+    close_SDL();
     return 0;
 }

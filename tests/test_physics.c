@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
+#include <math.h>
 #include "physics.h"
 
 // Helper function to compare floating point numbers
