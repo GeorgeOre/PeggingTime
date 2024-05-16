@@ -1,0 +1,35 @@
+CC = gcc
+CFLAGS = -Wall -Wextra -Iinclude
+LDFLAGS = -lm -lSDL2
+
+SRC_DIR = src
+OBJ_DIR = build
+INC_DIR = include
+
+SOURCES = $(wildcard $(SRC_DIR)/*.c)
+OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+TARGET = $(OBJ_DIR)/game
+
+.PHONY: all clean
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS)
+	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+
+clean:
+	rm -rf $(OBJ_DIR)/*
+	rm -rf $(TARGET)
+
+# Dependency check (example for SDL2)
+check-dependencies:
+	@command -v sdl2-config >/dev/null 2>&1 || { echo >&2 "SDL2 is not installed. Aborting."; exit 1; }
+
+# Build target with dependency check
+build: check-dependencies all

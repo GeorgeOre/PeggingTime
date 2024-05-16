@@ -1,0 +1,65 @@
+When starting a game development project, especially with a 
+custom physics engine and a tight timeline, it's important 
+to prioritize tasks that establish the core functionality 
+and allow for iterative development. 
+
+Here's a recommended implementation order:
+
+Week 1: Core Infrastructure and Basic Functionality
+Set Up Project Structure:
+    Create the directory structure and add the basic files 
+    (README.md, LICENSE, .gitignore, Makefile).
+Basic Physics Engine:
+    Implement the core physics engine (physics.c, physics.h).
+    Include basic physics features such as gravity and collision 
+    detection.
+Player Controls:
+    Implement basic player controls using the keyboard 
+    (controls.c, controls.h).
+    Ensure the player can move and perform basic actions like 
+    shooting projectiles.
+Rendering:
+    Set up a simple rendering system to display sprites on 
+    the screen (rendering.c, rendering.h).
+    Implement basic text rendering for debugging and UI elements.
+Game Loop:
+    Create the main game loop to handle game state updates, 
+    physics updates, and rendering (main.c).
+
+Week 2: Core Gameplay and AI
+Game Logic:
+    Implement the core game logic for single-player and 
+    multiplayer modes (game.c, game.h).
+    Develop the basic mechanics of the roguelike adventure and 
+    versus modes.
+AI Development:
+    Implement basic AI for enemies (ai.c, ai.h).
+    Ensure that the AI can interact with the physics engine 
+    and player.
+Level Design and Progression:
+    Create a system for generating and managing levels 
+    (levels.c, levels.h).
+    Develop a level tree for the roguelike adventure mode.
+Power-ups and Items:
+    Implement the power-up selection process and integrate it 
+    with the game mechanics.
+    Develop basic items and power-ups that affect gameplay.
+
+Week 3: Additional Features and Polish
+Multiplayer Mode:
+    Develop the networked/multiplayer functionality if it 
+    hasn't been fully implemented yet.
+    Test and debug the multiplayer interactions.
+Enhancements and Additional Features:
+    Implement any remaining features, such as 2D parallax 
+    effects, sound effects, music, and animations.
+    Add any optional but cool features if time permits.
+Polish and Optimization:
+    Optimize the physics engine and game performance.
+    Polish the user interface and overall game presentation.
+Testing and Debugging:
+    Conduct thorough testing of all features and game modes.
+    Fix any bugs and ensure the game is stable.
+Documentation:
+    Update the README.md with detailed instructions and documentation.
+    Ensure that the code is well-documented and maintainable.

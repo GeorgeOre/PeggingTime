@@ -1,0 +1,53 @@
+# PeggingTime Dependencies
+
+## Required Tools and Libraries
+
+1. **GCC (GNU Compiler Collection)**
+   - Install via package manager:
+     - Ubuntu: `sudo apt-get install gcc`
+     - macOS: `brew install gcc`
+     - Windows: [MinGW](http://www.mingw.org/)
+
+2. **Make**
+   - Install via package manager:
+     - Ubuntu: `sudo apt-get install make`
+     - macOS: `brew install make`
+     - Windows: [Make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm)
+
+3. **SDL2 (Simple DirectMedia Layer)**
+   - Install via package manager:
+     - Ubuntu: `sudo apt-get install libsdl2-dev`
+     - macOS: `brew install sdl2`
+     - Windows: [SDL2 Development Libraries](https://www.libsdl.org/download-2.0.php)
+
+4. **Other dependencies**
+   - List any other dependencies required for your project.
+
+## Installation Instructions
+
+1. **Clone the repository:**
+
+
+git clone https://github.com/GeorgeOre/PeggingTime.git
+cd PeggingTime
+
+
+2. **Install dependencies:**
+- Follow the instructions above to install GCC, Make, and SDL2.
+
+3. **Build the project:**
+
+
+make
+
+
+4. **Run the game:**
+
+
+./build/game
+
+
+## Additional Notes
+
+- Ensure all environment variables are set correctly if required by the libraries.
+- Check for any platform-specific instructions or troubleshooting steps.
