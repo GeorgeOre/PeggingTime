@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Iinclude $(shell sdl2-config --cflags) -I/usr/include/SDL2
-LDFLAGS = $(shell sdl2-config --libs) -lSDL2_image -lm
+LDFLAGS = $(shell sdl2-config --libs) -lSDL2_image -lSDL2_ttf -lm
 
 SRC_DIR = src
 OBJ_DIR = build

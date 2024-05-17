@@ -5,9 +5,7 @@
 #include "rendering.h"
 #include "game.h"
 #include "utils.h"
-
-void render_menu();
-void handle_menu_input(int* running, GameState* state);
+#include "menu.h"
 
 int main() {
     if (!init_SDL()) {
@@ -19,10 +17,11 @@ int main() {
         return 1;
     }
 
+    init_menu();
+
     int running = 1;
     float dt = 0.016; // Assuming 60 FPS
 
-    // Initialize game and set the initial state to the main menu
     Game game;
     game.state = GAME_MENU;
 
@@ -43,7 +42,6 @@ int main() {
 
                 SDL_Delay(16); // Roughly 60 FPS
 
-                // Exit game loop if game over
                 if (game.state == GAME_OVER) {
                     printf("Game Over!\n");
                     running = 0;
@@ -59,7 +57,6 @@ int main() {
             }
 
             while (running && game.state == GAME_VERSUS) {
-                // Handle input for both players
                 handle_input(&versus_game.player1, &running, 1);
                 handle_input(&versus_game.player2, &running, 2);
 
@@ -68,7 +65,6 @@ int main() {
 
                 SDL_Delay(16); // Roughly 60 FPS
 
-                // Exit game loop if game over
                 if (versus_game.state == GAME_OVER) {
                     printf("Game Over!\n");
                     running = 0;
