@@ -5,7 +5,7 @@ This document outlines the structure and content expected for the epic PeggingTi
 
 ## Organization of Your Design Document
 
-### Section 0: Summary
+### Section 0: Summaryy
 Here is a brief overview of the game design:
 - **Working Title**: PeggingTime was chosen because this game is based off of the game peglin.
 - **Team Members**: George Ore - Sole Developer.
