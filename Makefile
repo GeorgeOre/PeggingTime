@@ -1,66 +1,347 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -Iinclude $(shell sdl2-config --cflags) -I/usr/include/SDL2
-LDFLAGS = $(shell sdl2-config --libs) -lSDL2_image -lSDL2_ttf -lm
+LIBS = $(shell ls library | grep -E '.*\.c' | sed 's/\.c//g')
+OBJS = $(addprefix out/,$(LIBS:=.o))
 
-SRC_DIR = src
-OBJ_DIR = build
-INC_DIR = include
-TEST_DIR = tests
+TEST_BINS = bin/test_str_util bin/test_ll bin/test_http bin/test_router
+TEST_SERVER_DEPS = bin/test_server bin/web_server$(WS)
+TEST_SERVER_CMD = $(TEST_SERVER_DEPS) $(shell cs3-port)
 
-SOURCES = $(wildcard $(SRC_DIR)/*.c)
-OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-TEST_SOURCES = $(wildcard $(TEST_DIR)/*.c)
-TEST_OBJECTS = $(TEST_SOURCES:$(TEST_DIR)/%.c=$(OBJ_DIR)/%.o)
-TARGET = $(OBJ_DIR)/game
-TEST_TARGET = $(OBJ_DIR)/test_physics
-TEST_CONTROLS_TARGET = $(OBJ_DIR)/test_controls
-TEST_RENDERING_TARGET = $(OBJ_DIR)/test_rendering
-TEST_GAME_TARGET = $(OBJ_DIR)/test_game
+bin/test_%: out/test_%.o out/test_util.o $(OBJS) $(STAFF_OBJS) | bin
+	$(CC) $(CFLAGS) $^ -o $@
 
-.PHONY: all clean test test_controls test_rendering test_game
+all: $(TEST_BINS) server
 
-all: $(TARGET)
+task0: bin/test_str_util bin/test_ll bin/test_http $(TEST_SERVER_DEPS)
+	bin/test_str_util
+	bin/test_ll
+	bin/test_http
+	$(TEST_SERVER_CMD)
 
-$(TARGET): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
+task1: bin/test_router 
+	bin/test_router init
 
-$(TEST_TARGET): $(OBJ_DIR)/test_physics.o $(OBJ_DIR)/physics.o
-	$(CC) $(OBJ_DIR)/test_physics.o $(OBJ_DIR)/physics.o -o $@ $(LDFLAGS)
+task2: bin/test_router 
+	bin/test_router
 
-$(TEST_CONTROLS_TARGET): $(OBJ_DIR)/test_controls.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/physics.o
-	$(CC) $(OBJ_DIR)/test_controls.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/physics.o -o $@ $(LDFLAGS)
+test-server: $(TEST_SERVER_DEPS)
+	$(TEST_SERVER_CMD)
 
-$(TEST_RENDERING_TARGET): $(OBJ_DIR)/test_rendering.o $(OBJ_DIR)/rendering.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/physics.o
-	$(CC) $(OBJ_DIR)/test_rendering.o $(OBJ_DIR)/rendering.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/physics.o -o $@ $(LDFLAGS)
+server: bin/web_server$(WS)
+	@echo "Go to \033[0;32mhttp://labradoodle.caltech.edu:$(shell cs3-port)/hello\033[0m to access your hello world!"
+	@echo "Go to \033[0;32mhttp://labradoodle.caltech.edu:$(shell cs3-port)/roll\033[0m to access your die roller!"
+	@echo "Go to \033[0;32mhttp://labradoodle.caltech.edu:$(shell cs3-port)/bin/game.html\033[0m to access your game!"
+	$^ $(shell cs3-port)
 
-$(TEST_GAME_TARGET): $(OBJ_DIR)/test_game.o $(OBJ_DIR)/game.o $(OBJ_DIR)/physics.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/rendering.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/ai.o
-	$(CC) $(OBJ_DIR)/test_game.o $(OBJ_DIR)/game.o $(OBJ_DIR)/physics.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/rendering.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/ai.o -o $@ $(LDFLAGS)
+CC = clang
+ifndef NO_ASAN
+  CFLAGS = -fsanitize=address,undefined,leak
+  ifeq ($(wildcard .debug),)
+    $(shell $(CLEAN_COMMAND))
+    $(shell touch .debug)
+  endif
+# Compiling without asan (run 'make NO_ASAN=true all')
+else
+  CFLAGS = -O3
+  ifneq ($(wildcard .debug),)
+    $(shell $(CLEAN_COMMAND))
+    $(shell rm -f .debug)
+  endif
+endif
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+CFLAGS += -Iinclude -Wall -Wextra -g -fno-omit-frame-pointer
 
-$(OBJ_DIR)/%.o: $(TEST_DIR)/%.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+out/%.o: library/%.c | out
+	$(CC) -c $(CFLAGS) $^ -o $@
+out/%.o: server/%.c | out
+	$(CC) -c $(CFLAGS) $^ -o $@
+out/%.o: tests/%.c | out
+	$(CC) -c $(CFLAGS) $^ -o $@
 
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
+bin/test_server: out/test_server.o out/test_util.o out/server_test_util.o $(OBJS) | bin
+
+bin/test_suite_%: out/test_suite_%.o out/test_util.o $(OBJS) | bin
+	$(CC) $(CFLAGS) $^ -o $@
+
+bin/%: out/%.o $(OBJS) | bin
+	$(CC) $(CFLAGS) $^ -o $@
+
+test: $(TEST_BINS) $(TEST_SERVER_DEPS)
+	set -e; for f in $(TEST_BINS); do echo $$f; $$f; echo; done; $(TEST_SERVER_CMD)
+
+out:
+	mkdir -p $@
+
+bin:
+	mkdir -p $@
+
+# Removes all compiled files.
+CLEAN_COMMAND = find out/ ! -name .gitignore -type f -delete && \
+find bin/ ! -name .gitignore -type f -delete
 
 clean:
-	rm -rf $(OBJ_DIR)/*
-	rm -rf $(TARGET)
-	rm -rf $(TEST_TARGET)
-	rm -rf $(TEST_CONTROLS_TARGET)
-	rm -rf $(TEST_RENDERING_TARGET)
-	rm -rf $(TEST_GAME_TARGET)
+	mkdir -p out bin
+	$(CLEAN_COMMAND)
 
-test: $(TEST_TARGET)
-	./$(TEST_TARGET)
+# This special rule tells Make that "all", "clean", and "test" are rules
+# that don't build a file.
+.PHONY: all clean test
+# Tells Make not to delete the .o files after the executable is built
+.PRECIOUS: out/%.o
 
-test_controls: $(TEST_CONTROLS_TARGET)
-	./$(TEST_CONTROLS_TARGET)
 
-test_rendering: $(TEST_RENDERING_TARGET)
-	./$(TEST_RENDERING_TARGET)
 
-test_game: $(TEST_GAME_TARGET)
-	./$(TEST_GAME_TARGET)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # List of C files in "libraries" and "demo" that you have written. Any additional files
+# # should be added here.
+# GAMES = game
+# STUDENT_LIBS = asset_cache asset body collision color emscripten forces list polygon scene sdl_wrapper vector UI being shape weapon projectile
+
+# # find <dir> is the command to find files in a directory
+# # ! -name .gitignore tells find to ignore the .gitignore
+# # -type f only finds files
+# # -delete deletes all the files found
+# CLEAN_COMMAND = find out/ ! -name .gitignore -type f -delete && \
+# find bin/ ! -name .gitignore -type f -delete
+
+# # Compiling with asan (run 'make all' as normal)
+# ifndef NO_ASAN
+#   CFLAGS = -fsanitize=address,undefined,leak
+#   ifeq ($(wildcard .debug),)
+#     $(shell $(CLEAN_COMMAND))
+#     $(shell touch .debug)
+#   endif
+# # Compiling without asan (run 'make NO_ASAN=true all')
+# else
+#   CFLAGS = -O3
+#   ifneq ($(wildcard .debug),)
+#     $(shell $(CLEAN_COMMAND))
+#     $(shell rm -f .debug)
+#   endif
+# endif
+
+# # Use clang as the C compiler
+# CC = clang
+# # Flags to pass to clang:
+# # -Iinclude tells clang to look for #include files in the "include" folder
+# # -Wall turns on all warnings
+# # -g adds filenames and line numbers to the executable for useful stack traces
+# # -fno-omit-frame-pointer allows stack traces to be generated
+# #   (take CS 24 for a full explanation)
+# CFLAGS += -Iinclude $(shell sdl2-config --cflags) -Wall -g -fno-omit-frame-pointer
+
+# # Emscripten compilation section
+# # Flags to pass to emcc:
+# # -s EXIT_RUNTIME=1 shuts the program down properly
+# # -s ALLOW_MEMORY_GROWTH=1 allows for dynamic memory usage
+# # -s INITIAL_MEMORY sets the initial amount of memory
+# # -s USE_SDL=2 ports the sdl library.
+# # Other SDL ports are also included, like image and mixer
+# # -s ASSERTIONS=1 enables runtime checks for allocation errors
+# # -O2 specifies to compile the code with full optimizations. When debugging, you can change to O0 to step through code
+# # -g enables DWARF support, for debugging purposes
+# # -gsource-map --source-map-base http://localhost:8000/bin/ creates a source map from the C file for debugging
+# EMCC = emcc
+# EMCC_FLAGS = -s EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=655360000 -s USE_SDL=2 -s USE_SDL_GFX=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_TTF=2 -s USE_SDL_MIXER=2 -s ASSERTIONS=1 -O2 --use-preload-plugins --preload-file assets --source-map-base http://labradoodle.caltech.edu:$(shell cs3-port)/bin/
+
+# # Compiler flag that links the program with the math library
+# LIB_MATH = -lm
+# # Compiler flags that link the program with the math library
+# # Note that $(...) substitutes a variable's value, so this line is equivalent to
+# # LIBS = -lm
+# LIBS = $(LIB_MATH) $(shell sdl2-config --libs)
+
+# # List of compiled .o files corresponding to STUDENT_LIBS, e.g. "out/vector.o".
+# # Don't worry about the syntax; it's just adding "out/" to the start
+# # and ".o" to the end of each value in STUDENT_LIBS.
+# STUDENT_OBJS = $(addprefix out/,$(STUDENT_LIBS:=.o))
+# # List of compiled wasm.o files corresponding to STUDENT_LIBS
+# # Similarly to above, we add .wasm.o to the end of each value in STUDENT_LIBS
+# WASM_STUDENT_OBJS = $(addprefix out/,$(STUDENT_LIBS:=.wasm.o))
+# GAME_OBJS = $(addprefix out/,$(GAMES:=.wasm.o))
+
+# game: bin/game.html server
+
+# # Make the python server for your demos
+# # To run this, type 'make server'
+# server:
+# 	@echo "Go to \033[0;32mhttp://labradoodle.caltech.edu:$(shell cs3-port)/bin/\033[0m to access your demo!" && \
+# 	python3 -m http.server $(shell cs3-port) | grep -v "Serving HTTP"
+
+# # Any .o file in "out" is built from the corresponding C file.
+# # Although .c files can be directly compiled into an executable, first building
+# # .o files reduces the amount of work needed to rebuild the executable.
+# # For example, if only list.c was modified since the last build, only list.o
+# # gets recompiled, and clang reuses the other .o files to build the executable.
+# #
+# # "%" means "any string".
+# # Unlike "all", this target has a build command.
+# # "$^" is a special variable meaning "the source files"
+# # and $@ means "the target file", so the command tells clang
+# # to compile the source C file into the target .o file.
+# out/%.o: library/%.c # source file may be found in "library"
+# 	@git commit -am "Autocommit of library for ${USER}" > /dev/null || true
+# 	$(CC) -c $(CFLAGS) $^ -o $@
+# out/%.o: demo/%.c # or "demo"
+# 	@git commit -am "Autocommit of game for ${USER}" > /dev/null || true
+# 	$(CC) -c $(CFLAGS) $^ -o $@
+
+# # Emscripten compilation flags
+# # This is very similar to the above compilation, except for emscripten
+# out/%.wasm.o: library/%.c # source file may be found in "library"
+# 	@git commit -am "Autocommit of library for ${USER}" > /dev/null || true
+# 	$(EMCC) -c $(CFLAGS) $^ -o $@
+# out/%.wasm.o: demo/%.c # or "demo"
+# 	@git commit -am "Autocommit of game for ${USER}" > /dev/null || true
+# 	$(EMCC) -c $(CFLAGS) $^ -o $@
+
+# # Builds bin/%.html by linking the necessary .wasm.o files.
+# # Unlike the out/%.wasm.o rule, this uses the LIBS flags and omits the -c flag,
+# # since it is building a full executable. Also notice it uses our EMCC_FLAGS
+# bin/game.html: $(GAME_OBJS) $(WASM_STUDENT_OBJS)
+# 	$(EMCC) $(EMCC_FLAGS) $(CFLAGS) $(LIBS) $^ -o $@
+
+# # Builds the test suite executables from the corresponding test .o file
+# # and the library .o files. The only difference from the demo build command
+# # is that it doesn't link the SDL libraries.
+# # bin/test_suite_%: out/test_suite_%.o out/test_util.o $(STUDENT_OBJS)
+# # 	$(CC) $(CFLAGS) $(LIBS) $^ -o $@
+
+# # Runs the tests. "$(TEST_BINS)" requires the test executables to be up to date.
+# # The command is a simple shell script:
+# # "set -e" configures the shell to exit if any of the tests fail
+# # "for f in $(TEST_BINS); do ...; done" loops over the test executables,
+# #    assigning the variable f to each one
+# # "echo $$f" prints the test suite
+# # "$$f" runs the test; "$$" escapes the $ character,
+# #   and "$f" tells the shell to substitute the value of the variable f
+# # "echo" prints a newline after each test's output, for readability
+# # test: $(TEST_BINS)
+# # 	set -e; for f in $(TEST_BINS); do echo $$f; $$f; echo; done
+
+# # Removes all compiled files.
+# clean:
+# 	$(CLEAN_COMMAND)
+
+# # This special rule tells Make that "all", "clean", and "test" are rules
+# # that don't build a file.
+# .PHONY: all clean test
+# # Tells Make not to delete the .o files after the executable is built
+# .PRECIOUS: out/%.o
+# # Tells Make not to delete the wasm.o files after the executable is built
+# .PRECIOUS: out/%.wasm.o
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# CC = gcc
+# CFLAGS = -Wall -Wextra -Iinclude $(shell sdl2-config --cflags) -I/usr/include/SDL2
+# LDFLAGS = $(shell sdl2-config --libs) -lSDL2_image -lSDL2_ttf -lm
+
+# SRC_DIR = src
+# OBJ_DIR = build
+# INC_DIR = include
+# TEST_DIR = tests
+
+# SOURCES = $(wildcard $(SRC_DIR)/*.c)
+# OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+# TEST_SOURCES = $(wildcard $(TEST_DIR)/*.c)
+# TEST_OBJECTS = $(TEST_SOURCES:$(TEST_DIR)/%.c=$(OBJ_DIR)/%.o)
+# TARGET = $(OBJ_DIR)/game
+# TEST_TARGET = $(OBJ_DIR)/test_physics
+# TEST_CONTROLS_TARGET = $(OBJ_DIR)/test_controls
+# TEST_RENDERING_TARGET = $(OBJ_DIR)/test_rendering
+# TEST_GAME_TARGET = $(OBJ_DIR)/test_game
+
+# .PHONY: all clean test test_controls test_rendering test_game
+
+# all: $(TARGET)
+
+# $(TARGET): $(OBJECTS)
+# 	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
+
+# $(TEST_TARGET): $(OBJ_DIR)/test_physics.o $(OBJ_DIR)/physics.o
+# 	$(CC) $(OBJ_DIR)/test_physics.o $(OBJ_DIR)/physics.o -o $@ $(LDFLAGS)
+
+# $(TEST_CONTROLS_TARGET): $(OBJ_DIR)/test_controls.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/physics.o
+# 	$(CC) $(OBJ_DIR)/test_controls.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/physics.o -o $@ $(LDFLAGS)
+
+# $(TEST_RENDERING_TARGET): $(OBJ_DIR)/test_rendering.o $(OBJ_DIR)/rendering.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/physics.o
+# 	$(CC) $(OBJ_DIR)/test_rendering.o $(OBJ_DIR)/rendering.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/physics.o -o $@ $(LDFLAGS)
+
+# $(TEST_GAME_TARGET): $(OBJ_DIR)/test_game.o $(OBJ_DIR)/game.o $(OBJ_DIR)/physics.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/rendering.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/ai.o
+# 	$(CC) $(OBJ_DIR)/test_game.o $(OBJ_DIR)/game.o $(OBJ_DIR)/physics.o $(OBJ_DIR)/controls.o $(OBJ_DIR)/rendering.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/ai.o -o $@ $(LDFLAGS)
+
+# $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+# 	$(CC) $(CFLAGS) -c $< -o $@
+
+# $(OBJ_DIR)/%.o: $(TEST_DIR)/%.c | $(OBJ_DIR)
+# 	$(CC) $(CFLAGS) -c $< -o $@
+
+# $(OBJ_DIR):
+# 	mkdir -p $(OBJ_DIR)
+
+# clean:
+# 	rm -rf $(OBJ_DIR)/*
+# 	rm -rf $(TARGET)
+# 	rm -rf $(TEST_TARGET)
+# 	rm -rf $(TEST_CONTROLS_TARGET)
+# 	rm -rf $(TEST_RENDERING_TARGET)
+# 	rm -rf $(TEST_GAME_TARGET)
+
+# test: $(TEST_TARGET)
+# 	./$(TEST_TARGET)
+
+# test_controls: $(TEST_CONTROLS_TARGET)
+# 	./$(TEST_CONTROLS_TARGET)
+
+# test_rendering: $(TEST_RENDERING_TARGET)
+# 	./$(TEST_RENDERING_TARGET)
+
+# test_game: $(TEST_GAME_TARGET)
+# 	./$(TEST_GAME_TARGET)
