@@ -1,0 +1,90 @@
+###############################################################################
+       ____ ___ _____ ___ ____ _   _  ___  ____  _____
+      / ___|_ _|_   _|_ _/ ___| \ | |/ _ \|  _ \| ____|
+     | |  _ | |  | |  | | |  _|  \| | | | | |_) |  _|
+     | |_| || |  | |  | | |_| | |\  | |_| |  _ <| |___
+      \____|___| |_| |___\____|_| \_|\___/|_| \_\_____|
+###############################################################################
+
+##############################
+#     PYTHON & VENV STUFF    #
+##############################
+
+# Virtual environments
+.venv/
+venv/
+
+# Byte-code junk
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+*.whl
+
+# Unit test / coverage
+.cache/
+.coverage
+htmlcov/
+nosetests.xml
+coverage.xml
+
+# Jupyter
+.ipynb_checkpoints/
+
+##############################
+#     PYCHARM & IDE FILES    #
+##############################
+
+# JetBrains IDE directories
+.idea/
+#.idea/**/workspace.xml      # <-- uncomment to keep shared run configs but ignore local settings
+#.idea/**/tasks.xml
+#.idea/**/usage.statistics.xml
+
+# VS Code (if you bounce between editors)
+.vscode/
+
+##############################
+#     OS-SPECIFIC & MISC     #
+##############################
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.*.swp
+.*.swo
+
+# Logs
+*.log
+
+#################################
+#     EXTRA SAFETY / SECRETS    #
+#################################
+
+# IDE & editor backups
+*~
+*.bak
+*.tmp
+
+# Secret files (rename as needed)
+*.env
+.envrc
+.env.*
+
+###############################################################################
+# End of file                                                                 #
+###############################################################################
