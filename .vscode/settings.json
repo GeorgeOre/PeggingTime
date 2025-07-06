@@ -1,7 +1,0 @@
-{
-    "C_Cpp.default.compilerPath": "/usr/bin/gcc",
-    "files.associations": {
-        "sdl.h": "c"
-    },
-    "cmake.sourceDirectory": "/home/gore/projects/PeggingTime/src"
-}
