@@ -48,7 +48,10 @@ io.on("connection", socket => {
 
         // Start game only if exactly 2 players are in
         if (rooms[roomId].length === 2) {
-            console.log(`Starting game in room ${roomId}`);
+            const [player1, player2] = rooms[roomId];
+            io.to(player1).emit("assignRole", { role: "blue", position: "top", playerId: player1, otherId: player2 });
+            io.to(player2).emit("assignRole", { role: "red", position: "bottom", playerId: player2, otherId: player1 });
+
             io.to(roomId).emit("startGame");
         }
     });
