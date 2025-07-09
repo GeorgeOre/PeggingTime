@@ -58,10 +58,17 @@ io.on("connection", socket => {
 
     // Listen for the socket to emit a playerAction signal
     socket.on("playerAction", data => {
-        // Send player action data to all other sockets in the room
+        // Broadcast player action data to everyone in the room INCLUDING the sender
         // data = { roomId, action: { type, payload } }
         socket.to(data.roomId).emit("playerAction", data.action);
+        
+        // Below is the version that broadcasts to itself also
+        // io.to(data.roomId).emit("playerAction", data.action);
+
+
     });
+
+    
 
     // Listen for the socket to emit a disconnect signal
     socket.on("disconnecting", () => {
